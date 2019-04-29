@@ -14,10 +14,48 @@ def draw_directrix(count):
         canvas.create_line(0, 400, 800, 400, fill="green", arrow=LAST)
 
 
-def main():
-    y_count = math.fabs(p) * 10
-    draw_directrix(y_count)
+def draw_symmetrical(xx, yy):
+    canvas.create_line(xx, yy, xx + 1, yy, fill="red")
+    canvas.create_line(xx, yy, xx, yy + 1, fill="red")
 
+
+# реализация алгоритма
+def brezenham(count, xx_0, yy_0):
+    xx = xx_0
+    yy = yy_0
+    delta = (xx - d)**2 + (yy - b - (c**2)/(4 * a))**2 - (yy - b + (c**2)/(4 * a))**2
+    while 0 < yy < 800:
+        # draw_symmetrical(xx, yy)
+        #canvas.create_line(xx, yy, xx, yy+1, fill="red")
+        canvas.create_line(xx, yy, xx + 1, yy + 1, fill="red")
+        if delta < 0:
+            # D or C
+            xx += 1
+            delta += 2 * xx - 2 * d + 1
+            if delta + 2 * p > delta:
+                yy += 1
+                delta -= 2 * p
+        if delta > 0:
+            # B or C
+            yy += 1
+            delta -= 2 * p
+            if delta - 2 * xx + 2 * d - 1 > delta:
+                xx += 1
+                delta += 2 * xx - 2 * d + 1
+
+
+
+def main():
+    # вычисление масштаба (кол-во y)
+    y_count = math.fabs(p) * 100
+    draw_directrix(y_count)
+    yy_b = 0
+    x_pixel = d * (800 / y_count)
+    if b < 0:
+        yy_b = 400 + (800 / y_count) * math.fabs(b)
+    if b > 0:
+        yy_b = 400 - (800 / y_count) * math.fabs(b)
+    brezenham(y_count, x_pixel, yy_b)
 
 
 if __name__ == "__main__":
@@ -26,7 +64,7 @@ if __name__ == "__main__":
     global c
     global d
     global p
-    print("введите 4 числа:")
+    print("y = at^2 + b\nx = ct + d\nвведите 4 числа:")
     a = int(input())
     b = int(input())
     c = int(input())
@@ -42,3 +80,4 @@ if __name__ == "__main__":
     canvas.pack()
     main()
     root.mainloop()
+
