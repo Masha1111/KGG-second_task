@@ -15,9 +15,9 @@ class SecondTask(QWidget):
 
         # y = at^2 + b
         # x = ct + d
-        self.a = 1
+        self.a = -1
         self.b = 1
-        self.c = 1
+        self.c = -1
         self.d = 1
 
         self.function_upper_bound = 1000
@@ -29,9 +29,9 @@ class SecondTask(QWidget):
         self.start = -5
         self.end = 5
 
-        self.focus = self.pf.from_coord(self.d, self.b + (self.c ^ 2) / (4 * self.a))
+        self.focus = self.pf.from_coord(self.d, self.b + (self.c ** 2) / (4 * self.a))
         self.vertex = self.pf.from_coord(self.d, self.b)
-        self.directrix_zero = self.pf.from_coord(0, self.b - (self.c ^ 2) / (4 * self.a))
+        self.directrix_zero = self.pf.from_coord(0, self.b - (self.c ** 2) / (4 * self.a))
 
         print('focus:', self.focus)
         print('vertex:', self.vertex)
@@ -68,7 +68,7 @@ class SecondTask(QWidget):
                     *self.pf.from_coord(self.end, self.directrix_zero.y).screen())
 
     def error_size(self, u, v):
-        distance_to_directrix = abs(v + (self.c ^ 2) / (4 * self.a) - self.b)
+        distance_to_directrix = abs(v + (self.c ** 2) / (4 * self.a) - self.b)
         distance_to_focus = math.sqrt((self.focus.u - u) ** 2 + (self.focus.v - v) ** 2)
         return abs(distance_to_directrix - distance_to_focus)
 
