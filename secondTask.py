@@ -15,10 +15,10 @@ class SecondTask(QWidget):
 
         # y = at^2 + b
         # x = ct + d
-        self.a = 5
+        self.a = 1
         self.b = 1
-        self.c = 10
-        self.d = 2
+        self.c = 1
+        self.d = 1
 
         self.function_upper_bound = 1000
         self.function_lower_bound = -1000
@@ -29,9 +29,9 @@ class SecondTask(QWidget):
         self.start = -5
         self.end = 5
 
-        self.focus = self.pf.from_substituted(self.d, self.b + (self.c ^ 2) / (4 * self.a))
-        self.vertex = self.pf.from_substituted(self.d, self.b)
-        self.directrix_zero = self.pf.from_substituted(0, self.b - (self.c ^ 2) / (4 * self.a))
+        self.focus = self.pf.from_coord(self.d, self.b + (self.c ^ 2) / (4 * self.a))
+        self.vertex = self.pf.from_coord(self.d, self.b)
+        self.directrix_zero = self.pf.from_coord(0, self.b - (self.c ^ 2) / (4 * self.a))
 
         print('focus:', self.focus)
         print('vertex:', self.vertex)
@@ -64,8 +64,8 @@ class SecondTask(QWidget):
 
         # директриса
         qp.setPen(QPen(Qt.red, 1, Qt.SolidLine))
-        qp.drawLine(*self.pf.from_cartesian(self.start, self.directrix_zero.y).screen(),
-                    *self.pf.from_cartesian(self.end, self.directrix_zero.y).screen())
+        qp.drawLine(*self.pf.from_coord(self.start, self.directrix_zero.y).screen(),
+                    *self.pf.from_coord(self.end, self.directrix_zero.y).screen())
 
     def error_size(self, u, v):
         distance_to_directrix = abs(v + (self.c ^ 2) / (4 * self.a) - self.b)
@@ -75,7 +75,7 @@ class SecondTask(QWidget):
     def get_best_point(self, old_point):
         return \
             min(list(
-                map(lambda point: (self.error_size(*point.substituted()), point),
+                map(lambda point: (self.error_size(*point.coord()), point),
                     old_point.neighbors())), key=lambda x: x[0], default=(None, None))[1]
 
     def draw_function(self, qp):
@@ -98,7 +98,7 @@ class SecondTask(QWidget):
 
     def draw_axes(self, qp):
         qp.setPen(QPen(Qt.black, 1, Qt.SolidLine))
-        origin = self.pf.from_cartesian(0, 0)
+        origin = self.pf.from_coord(0, 0)
         qp.drawLine(origin.xx, 0, origin.xx, self.geometry().height())
         qp.drawLine(0, origin.yy, self.geometry().width(), origin.yy)
         self.draw_axes_notches(qp, origin)
@@ -109,8 +109,8 @@ class SecondTask(QWidget):
         step = max(1, round(self.pf.from_screen(32, 0).x - self.pf.from_screen(0, 0).x))
 
         for x in range(step, max(abs(self.start), abs(self.end)), step):
-            xx_right, yy = self.pf.from_cartesian(x, 0).screen()
-            xx_left, yy = self.pf.from_cartesian(-x, 0).screen()
+            xx_right, yy = self.pf.from_coord(x, 0).screen()
+            xx_left, yy = self.pf.from_coord(-x, 0).screen()
             qp.drawLine(xx_right, yy - 2, xx_right, yy + 2)
             qp.drawLine(xx_left, yy - 2, xx_left, yy + 2)
             qp.drawText(QRect(xx_right - 10, yy + 10, 20, 20), Qt.AlignCenter, str(x))
@@ -118,8 +118,8 @@ class SecondTask(QWidget):
 
         step = max(1, round(self.pf.from_screen(0, 0).y - self.pf.from_screen(0, 32).y))
         for y in range(step, max(abs(self.ymin), abs(self.ymax)), step):
-            xx, yy_up = self.pf.from_cartesian(0, y).screen()
-            xx, yy_down = self.pf.from_cartesian(0, -y).screen()
+            xx, yy_up = self.pf.from_coord(0, y).screen()
+            xx, yy_down = self.pf.from_coord(0, -y).screen()
             qp.drawLine(xx - 2, yy_up, xx + 2, yy_up)
             qp.drawLine(xx - 2, yy_down, xx + 2, yy_down)
             qp.drawText(QRect(xx + 10, yy_up - 10, 20, 20), Qt.AlignCenter, str(y))
@@ -143,21 +143,16 @@ class PointFactory:
     def from_screen(self, xx, yy):
         return Point('screen', xx, yy, self.base)
 
-    def from_cartesian(self, x, y):
-        return Point('cartesian', x, y, self.base)
-
-    def from_substituted(self, u, v):
-        return Point('substituted', u, v, self.base)
+    def from_coord(self, x, y):
+        return Point('coord', x, y, self.base)
 
 
 class Point:
     def __init__(self, space, x, y, base):
         self.base = base
         if space == 'screen':
-            self._x, self._y = self._screen_to_cartesian(x, y)
-        elif space == 'cartesian':
-            self._x, self._y = x, y
-        elif space == 'substituted':
+            self._x, self._y = self._screen_to_coord(x, y)
+        elif space == 'coord':
             self._x, self._y = x, y
 
     @property
@@ -205,13 +200,10 @@ class Point:
     def screen(self):
         return self.xx, self.yy
 
-    def cartesian(self):
+    def coord(self):
         return self.x, self.y
 
-    def substituted(self):
-        return self.u, self.v
-
-    def _screen_to_cartesian(self, x, y):
+    def _screen_to_coord(self, x, y):
         return x * (self.base.end - self.base.start) / self.base.geometry().width() + self.base.start, \
               y * (self.base.ymin - self.base.ymax) / self.base.geometry().height() + self.base.ymax
 
